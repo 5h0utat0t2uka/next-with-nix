@@ -1,0 +1,25 @@
+.page {
+  min-block-size: 100svb;
+  display: grid;
+  place-content: center;
+  font-family: var(--font-geist-sans);
+  main {
+    max-inline-size: min(900px, 90%);
+    margin-inline: auto;
+    display: grid;
+    gap: 2rem;
+    h1 {
+      letter-spacing: -0.03em;
+      text-wrap: pretty;
+    }
+    div {
+      display: grid;
+      gap: 1rem;
+    }
+
+    p {
+      color: #909090;
+      line-height: 1.4;
+    }
+  }
+}
