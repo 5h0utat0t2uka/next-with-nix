@@ -1,18 +1,12 @@
 import Image from "next/image";
+import logo from "../../public/next.svg";
 import styles from "./page.module.css";
 
 export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt=""
-          width={100}
-          height={20}
-          priority
-        />
+        <Image className={styles.logo} src={logo} alt="" priority />
         <div className={styles.intro}>
           <h1>To get started, edit the page.tsx file.</h1>
           <p>

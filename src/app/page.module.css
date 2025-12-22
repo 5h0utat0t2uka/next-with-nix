@@ -8,6 +8,10 @@
     margin-inline: auto;
     display: grid;
     gap: 2rem;
+    .logo {
+      inline-size: 100px;
+      block-size: auto;
+    }
     h1 {
       letter-spacing: -0.03em;
       text-wrap: pretty;
@@ -20,6 +24,7 @@
     p {
       color: #909090;
       line-height: 1.4;
+      text-box: trim-both cap alphabetic;
     }
   }
 }
