@@ -6,8 +6,10 @@
 
 ---
 
+# パッケージのインストール  
+すでに`nix`, `direnv`をインストール済みの場合はスキップしてください
+
 ## 1. `nix` のインストール  
-すでにインストール済みの場合はスキップしてください
 ```sh
 curl -fsSL https://install.determinate.systems/nix | sh -s -- install
 ```
@@ -19,7 +21,6 @@ nix --version
 ```
 
 ## 2. `direnv` のインストール  
-すでにインストール済みの場合はスキップしてください
 ```sh
 brew install direnv
 ```
@@ -38,14 +39,17 @@ direnv version
 
 ---
 
+# 初回の設定と起動  
+
 ## 1. リポジトリのクローン
 ```sh
-git clone <repo-url>
+git clone <このリポジトリ>
 cd next-with-nix
 ```
 
 ## 2. `dotenvx` を利用した環境変数管理  
-このサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgit管理する前提です  
+このサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
+
 そのためこの2つを復号するための `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` の値をコピーして、以下のコマンドで`.secrets/`の中に用意して、開発時にロードされるようにします
 ```sh
 mkdir -p .secrets
@@ -62,10 +66,10 @@ chmod 600 .secrets/dotenv_private_key_production
 direnv allow
 ```
 
-初回の許可を行うと `.envrc` の `use flake` で `flake.nix` が評価されるので、下記でnodeのバージョンが表示されれば正常です  
+初回の許可を行うと `flake.nix` が評価されるので、下記でnodeのバージョンが表示されれば正常です  
 ```sh
 which node # /nix/store/xxx-nodejs-24.11.1/bin/node
-node -v    # v24.x
+node -v    # v24.11.1
 ```
 > [!NOTE]
 > `node` の参照が `/nix/store/` で始まるパスになってることを確認してください
@@ -79,4 +83,21 @@ npm ci
 npm run dev
 ```
 > [!NOTE]
-> `npm run dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、暗号化された `.env.development` が自動的に復号・展開されます
+> `npm run dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、暗号化された `.env.development` が自動的に展開されます
+
+---
+
+# 開発と運用
+
+## 1. 環境変数の確認と変更・追加
+既存の`SOME_VAR`を確認する場合
+```sh
+DOTENV_PRIVATE_KEY=DOTENV_PRIVATE_KEY_DEVELOPMENT npx dotenvx get SOME_VAR -f .env.development
+```
+
+既存の`SOME_VAR`を更新あるいは新しく追加する場合
+```sh
+npx dotenvx set SOME_VAR "value" -f .env.development
+```
+
+---
