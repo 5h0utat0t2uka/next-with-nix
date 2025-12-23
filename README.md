@@ -47,26 +47,40 @@ git clone <このリポジトリ>
 cd next-with-nix
 ```
 
-## 2. `dotenvx` を利用した環境変数管理  
+## 2. `dotenvx` を利用した環境変数の管理  
 このサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
+この2つを復号するための `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` を開発時にロードされるようにします  
 
-そのためこの2つを復号するための `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` の値をコピーして、以下のコマンドで`.secrets/`の中に用意して、開発時にロードされるようにします
+1. **安全な経路**で `.env.keys` ファイルを受け取ります  
+2. プロジェクトのルートに `.env.keys` を配置して確認  
 ```sh
-mkdir -p .secrets
-printf '%s' '<development 用の復号鍵>' > .secrets/dotenv_private_key_development
-printf '%s' '<production 用の復号鍵>' > .secrets/dotenv_private_key_production
-chmod 600 .secrets/dotenv_private_key_development
-chmod 600 .secrets/dotenv_private_key_production
+cp /path/to/.env.keys ./env.keys
+cat .env.keys
+```
+
+以下のように各環境のキーが指定されてるか確認してください
+```sh
+#/------------------!DOTENV_PRIVATE_KEYS!-------------------/
+#/ private decryption keys. DO NOT commit to source control /
+#/     [how it works](https://dotenvx.com/encryption)       /
+#/----------------------------------------------------------/
+
+# .env.development
+DOTENV_PRIVATE_KEY_DEVELOPMENT=xxx
+
+# .env.production
+DOTENV_PRIVATE_KEY_PRODUCTION=zzz
 ```
 
 ## 3. `direnv` の有効化  
 このリポジトリには `.envrc` が含まれています  
-これによってディレクトリに入ると自動的に環境変数が読み込まれるので、以下のコマンドで許可します
+これによってディレクトリに入ると自動的に `devShell` 起動されるようになるので、以下のコマンドで許可します
 ```sh
 direnv allow
 ```
 
-初回の許可を行うと `flake.nix` が評価されるので、下記でnodeのバージョンが表示されれば正常です  
+初回の許可を行うと `use nix` が評価され、nix環境の `devShell` が起動します  
+このタイミングで必要な依存がインストールされるので、下記でnodeのバージョンが表示されれば正常です  
 ```sh
 which node # /nix/store/xxx-nodejs-24.11.1/bin/node
 node -v    # v24.11.1
@@ -83,7 +97,7 @@ npm ci
 npm run dev
 ```
 > [!NOTE]
-> `npm run dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、暗号化された `.env.development` が自動的に展開されます
+> `npm run dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、`[dotenvx@1.51.2] injecting env` のように暗号化された `.env.development` が自動的に展開されます
 
 ---
 
