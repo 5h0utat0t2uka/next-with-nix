@@ -17,6 +17,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  console.log(process.env.TEST_ENV);
   return (
     <html lang="en">
       <body className={`${geistSans.variable}`}>{children}</body>

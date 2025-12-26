@@ -2,17 +2,18 @@
 
 - `node`や`npm`がインストール済みの場合、既存のバージョンから隔離された開発環境にする
 - 環境変数は`dotenvx`で暗号化された状態でgitで管理する
-- `dotenvx`の復号化のキーは[pass](https://www.passwordstore.org)で管理を行い、さらに`gpg`で暗号化して復号鍵をプロジェクトの外に置いた状態にする
-- `.envrc`からは`.gitignore`した`.envrc.local`の読み込みだけ行い、`.envrc.local`から`pass show`で復号鍵を展開させる
-- 開発者間では`.envrc.local`のみを共有する
+- `dotenvx`の復号化のキーは[doppler](https://www.doppler.com)
+<!--- `dotenvx`の復号化のキーは[pass](https://www.passwordstore.org)で管理を行い、さらに`gpg`で暗号化して復号鍵をプロジェクトの外に置いた状態にする-->
+<!--- `.envrc`からは`.gitignore`した`.envrc.local`の読み込みだけ行い、`.envrc.local`から`pass show`で復号鍵を展開させる-->
+<!--- 開発者間では`.envrc.local`のみを共有する-->
 - 事前にロックファイルから `osv-scanner` を利用して、インストールするnpm packageの脆弱性を確認する
 
 ---
 
-# パッケージのインストール  
+## パッケージのインストール  
 すでに`nix`, `direnv`をインストール済みの場合はスキップしてください
 
-## 1. `nix` のインストール  
+### 1. `nix` のインストール  
 ```sh
 curl -fsSL https://install.determinate.systems/nix | sh -s -- install
 ```
@@ -23,7 +24,7 @@ exec $SHELL
 nix --version
 ```
 
-## 2. `direnv` のインストール  
+### 2. `direnv` のインストール  
 ```sh
 brew install direnv
 ```
@@ -42,15 +43,15 @@ direnv version
 
 ---
 
-# 初回の設定と起動  
+## 初回の設定と起動  
 
-## 1. リポジトリのクローン
+### 1. リポジトリのクローン
 ```sh
 git clone <このリポジトリ>
 cd next-with-nix
 ```
 
-## 2. `dotenvx` を利用した環境変数の管理  
+### 2. `dotenvx` を利用した環境変数の管理  
 このサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
 この2つを復号するための `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` を開発時にロードされるようにします  
 
@@ -91,7 +92,7 @@ node -v    # v24.11.1
 > [!NOTE]
 > `node` の参照が `/nix/store/` で始まるパスになってることを確認してください
 
-## 4. 依存関係のインストールと開発サーバの起動  
+### 4. 依存関係のインストールと開発サーバの起動  
 通常通り以下のコマンドで依存のインストールと起動を行います  
 この際 `npm run scan` を実行して脆弱性を確認し、問題なければインストールを行います
 ```sh
@@ -104,9 +105,9 @@ npm run dev
 
 ---
 
-# 開発と運用
+## 開発と運用
 
-## 1. 環境変数の確認と変更・追加
+### 1. 環境変数の確認と変更・追加
 - 既存の`SOME_VAR`を確認する場合
 ```sh
 DOTENV_PRIVATE_KEY=DOTENV_PRIVATE_KEY_DEVELOPMENT npx dotenvx get SOME_VAR -f .env.development
@@ -117,21 +118,21 @@ DOTENV_PRIVATE_KEY=DOTENV_PRIVATE_KEY_DEVELOPMENT npx dotenvx get SOME_VAR -f .e
 npx dotenvx set SOME_VAR "value" -f .env.development
 ```
 
-## 2. バージョン管理
+### 2. バージョン管理
 `node`を例として`nix`の`devShells`で管理してるパッケージのバージョン管理用法  
 
-### メジャーバージョンを上げる場合  
+#### メジャーバージョンを上げる場合  
 1. `flake.nix`の`packages`内のリストの`nodejs_24`を`nodejs_26`などに変更
 2. `nix flake update`で`flake.lock`を更新
 3. `direnv reload`を行い反映
 4. `node -v`でバージョン確認
 
-### マイナーバージョンを上げる場合  
+#### マイナーバージョンを上げる場合  
 1. `flake.nix`は変更せず`nix flake update`を実行
 2. `nixpkgs`の参照先が最新コミットになり、その中に含まれる「24系で最も新しいバージョン」が取得される
 3. `node -v`でバージョン確認
 
-### 特定のバージョンを指定する場合
+#### 特定のバージョンを指定する場合
 `nix`では`nodejs_24`を指定することで、常にその時の最新バージョンを取得します  
 特定バージョンで固定するには、以下の手順で直接参照する必要があります  
 1. [nixhub](https://www.nixhub.io/) などで、目的のバージョンが含まれるリファレンスのコミットハッシュをコピー
