@@ -1,0 +1,3 @@
+setup:
+  - project: next-with-nix
+    config: dev
