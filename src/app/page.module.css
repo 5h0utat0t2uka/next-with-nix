@@ -7,7 +7,7 @@
     max-inline-size: min(900px, 90%);
     margin-inline: auto;
     display: grid;
-    gap: 2rem;
+    gap: 3rem;
     .logo {
       inline-size: 100px;
       block-size: auto;
@@ -18,13 +18,19 @@
     }
     div {
       display: grid;
-      gap: 1rem;
+      gap: 1.5rem;
     }
 
     p {
-      color: #909090;
+      letter-spacing: 0.02em;
+      font-size: 0.9rem;
       line-height: 1.4;
+      color: #909090;
       text-box: trim-both cap alphabetic;
+      span {
+        font-weight: 600;
+        color: #000000;
+      }
     }
   }
 }

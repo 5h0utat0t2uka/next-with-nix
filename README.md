@@ -1,8 +1,11 @@
 このリポジトリは `nix`, `direnv`, `dotenvx` を利用して **Next.js** の開発環境を、異なるOSや開発者の環境で再現するためのサンプルです
 
 - `node`や`npm`がインストール済みの場合、既存のバージョンから隔離された開発環境にする
-- 環境変数は暗号化された状態でgitで管理して、復号化のためのキーのみを開発者間で共有する
-- 事前にロックファイルから `osv-scanner` を利用して脆弱性を確認する
+- 環境変数は`dotenvx`で暗号化された状態でgitで管理する
+- `dotenvx`の復号化のキーは[pass](https://www.passwordstore.org)で管理を行い、さらに`gpg`で暗号化して復号鍵をプロジェクトの外に置いた状態にする
+- `.envrc`からは`.gitignore`した`.envrc.local`の読み込みだけ行い、`.envrc.local`から`pass show`で復号鍵を展開させる
+- 開発者間では`.envrc.local`のみを共有する
+- 事前にロックファイルから `osv-scanner` を利用して、インストールするnpm packageの脆弱性を確認する
 
 ---
 
@@ -104,14 +107,70 @@ npm run dev
 # 開発と運用
 
 ## 1. 環境変数の確認と変更・追加
-既存の`SOME_VAR`を確認する場合
+- 既存の`SOME_VAR`を確認する場合
 ```sh
 DOTENV_PRIVATE_KEY=DOTENV_PRIVATE_KEY_DEVELOPMENT npx dotenvx get SOME_VAR -f .env.development
 ```
 
-既存の`SOME_VAR`を更新あるいは新しく追加する場合
+- 既存の`SOME_VAR`を更新あるいは新しく追加する場合
 ```sh
 npx dotenvx set SOME_VAR "value" -f .env.development
 ```
 
----
+## 2. バージョン管理
+`node`を例として`nix`の`devShells`で管理してるパッケージのバージョン管理用法  
+
+### メジャーバージョンを上げる場合  
+1. `flake.nix`の`packages`内のリストの`nodejs_24`を`nodejs_26`などに変更
+2. `nix flake update`で`flake.lock`を更新
+3. `direnv reload`を行い反映
+4. `node -v`でバージョン確認
+
+### マイナーバージョンを上げる場合  
+1. `flake.nix`は変更せず`nix flake update`を実行
+2. `nixpkgs`の参照先が最新コミットになり、その中に含まれる「24系で最も新しいバージョン」が取得される
+3. `node -v`でバージョン確認
+
+### 特定のバージョンを指定する場合
+`nix`では`nodejs_24`を指定することで、常にその時の最新バージョンを取得します  
+特定バージョンで固定するには、以下の手順で直接参照する必要があります  
+1. [nixhub](https://www.nixhub.io/) などで、目的のバージョンが含まれるリファレンスのコミットハッシュをコピー
+2. `flake.nix`の`inputs`に以下のように追記
+```nix
+inputs = {
+  # 特定のバージョンが含まれるコミットハッシュを指定して input を追加（24.11.0の場合）
+  nixpkgs-node-fixed.url = "github:NixOS/nixpkgs/1d4c88323ac36805d09657d13a5273aea1b34f0c";
+};
+```
+3. `flake.nix`の`outputs`で以下のように引数を追加して、パッケージの更新
+```nix
+outputs = { self, nixpkgs, flake-utils, git-hooks, nixpkgs-node-fixed, ... }:
+
+# 中略
+
+let
+  pkgs = import nixpkgs { inherit system; };
+  # 追加した input をそのシステム用に import する
+  pkgs-fixed = import nixpkgs-node-fixed { inherit system; };
+in
+
+# 中略
+
+devShells.default = pkgs.mkShell {
+  packages = with pkgs; [
+    # pkgs-fixed から nodejs を取り出す
+    pkgs-fixed.nodejs_24
+    git
+    biome
+    osv-scanner
+  ];
+  shellHook = ''
+    ${preCommit.shellHook}
+    echo "node: $(node -v)"
+    echo "npm: $(npm -v)"
+  '';
+};
+```
+3. `nix flake update`で`flake.lock`を更新
+4. `direnv reload`を行い反映
+5. `node -v`でバージョン確認

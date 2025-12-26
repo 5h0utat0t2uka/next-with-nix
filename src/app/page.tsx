@@ -10,8 +10,9 @@ export default function Home() {
         <div className={styles.intro}>
           <h1>To get started, edit the page.tsx file.</h1>
           <p>
-            This App is a sample for building a Next.js development environment
-            using Nix, direnv and dotenvx.
+            This <span>{process.env.NEXT_PUBLIC_APP_NAME}</span> is a sample for
+            building a Next.js development environment using Nix, direnv and
+            dotenvx.
           </p>
         </div>
       </main>
