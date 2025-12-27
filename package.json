@@ -6,9 +6,9 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "doppler run -- dotenvx run -f .env.development -- next dev",
-    "start": "doppler run -- dotenvx run -f .env.production -- next start",
-    "build": "doppler run -- dotenvx run -f .env.production -- next build",
+    "dev": "infisical run --env dev --path /next-with-nix -- dotenvx run -f .env.development -- next dev",
+    "start": "infisical run --env prod --path /next-with-nix -- dotenvx run -f .env.production -- next start",
+    "build": "infisical run --env prod --path /next-with-nix -- dotenvx run -f .env.production -- next build",
     "lint": "biome check .",
     "format": "biome format --write .",
     "scan": "osv-scanner scan source -r ."
