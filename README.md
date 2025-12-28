@@ -1,12 +1,13 @@
 ## 構成  
-このリポジトリは `nix`, `direnv`, `dotenvx`, `ni` を利用して **Next.js** の開発環境を、異なるOSや開発者間の環境で再現するためのサンプルです  
-また、セキュリティ対策としてパッケージマネージャには`pnpm`を利用します  
+このリポジトリは `nix`, `direnv`, `dotenvx`, `pnpm`, `ni` を利用して、セキュアな **Next.js** の開発環境を、異なるOSや開発者間の環境で再現するためのサンプルです  
 
 ### 開発環境の趣旨と概要  
 - 各ユーザー環境の`node`や`pnpm`のインストール有無に関わらず、既存のバージョンから隔離された開発環境にする
-- `osv-scanner` を利用して、インストール前にロックファイルからパッケージの脆弱性を確認する
-- サプライチェーン攻撃・パッケージ汚染の対策として、信用するパッケージを除いてレジストリ公開後24時間未満のパッケージをインストールしない
-- インストール時の`preinstall`や`postinstall`などのビルドスクリプトは、明示的に許可したパッケージ以外は実行させない
+- `osv-scanner` を利用して、依存関係をインストールする前にロックファイルからパッケージの脆弱性を確認する
+- サプライチェーン攻撃・パッケージ汚染の対策として、信用するパッケージを除いてレジストリ公開後24時間未満のパッケージをインストールしない  
+悪意のあるパッケージは多くの場合レジストリ公開後数時間程度で削除されるため、インストールを未然に防ぐための対策です
+- インストール時の`preinstall`や`postinstall`などのビルドスクリプトは、明示的に許可したパッケージ以外は実行させない  
+これはビルドスクリプトをトリガとする感染を防ぐための対策です
 
 ### 機密情報の取り扱い  
 このリポジトリでは`dotenvx`で`.env*`の内容を暗号化して、復号鍵を[infisical](https://infisical.com/)で管理する事で、プロジェクト内に平文のシークレット関連が存在しない状態にしています  
@@ -19,7 +20,8 @@ export DOTENV_PRIVATE_KEY_DEVELOPMENT="開発環境の復号鍵"
 export DOTENV_PRIVATE_KEY_PRODUCTION="本番環境の復号鍵"
 ```
 
-[infisical](https://infisical.com/)以外にも[doppler](https://www.doppler.com/)など類似サービスはありますが、どれも有償か無償であっても何かしら制限があるので、チーム開発を前提とした場合にチーム内の足並みを揃えることが可能であれば[pass](https://www.passwordstore.org/)を利用することで、開発者のローカル環境のプロジェクト外（ホームディレクトリ）に暗号化したパスワードストアを作成して、以下のように復号鍵を展開することが可能です
+[infisical](https://infisical.com/)以外にも[doppler](https://www.doppler.com/)など類似サービスはありますが、どれも有償か無償であっても何かしら制限があります  
+チーム開発を前提とした場合にチーム内の足並みを揃えることが可能であれば[pass](https://www.passwordstore.org/)を利用することで、開発者のローカル環境のプロジェクト外（ホームディレクトリ）に暗号化したパスワードストアを作成して、以下のように復号鍵を展開することが可能です
 ``` sh
 export DOTENV_PRIVATE_KEY_DEVELOPMENT="$(
   pass show path/to/repository/password-store/DEVELOPMENT | head -n 1
@@ -30,8 +32,6 @@ export DOTENV_PRIVATE_KEY_PRODUCTION="$(
 ```
 
 この方法は外部サービスのストアに頼らず無償で管理することが可能な反面、運用や導入コストは高くなりますが、セキュリティリスクとのトレードオフになります
-
----
 
 ## パッケージのインストール  
 すでに`nix`, `direnv`をインストール済みの場合はスキップしてください
@@ -64,8 +64,6 @@ exec $SHELL
 direnv version
 ```
 
----
-
 ## 初回の設定と起動  
 
 ### 1. リポジトリのクローン
@@ -92,8 +90,18 @@ infisical login
 - **安全な経路**で `.envrc.local` ファイルを受け取ります  
 - プロジェクトのルートに `.envrc.local` を配置して確認  
 ```sh
-cp /path/to/.envrc.local ./envrc.local
-cat .envrc.local
+cp /path/from/.envrc.local ./envrc.local
+```
+- `package.json` の `scripts` から`infisical`を取り除いて以下のように変更
+```json
+"scripts": {
+  "dev": "dotenvx run -f .env.development -- next dev",
+  "start": "dotenvx run -f .env.production -- next start",
+  "build": "dotenvx run -f .env.production -- next build",
+  "lint": "biome check .",
+  "format": "biome format --write .",
+  "scan": "osv-scanner scan source -r ."
+},
 ```
 
 ## 3. `direnv` の有効化  
@@ -124,17 +132,15 @@ nr dev  # 起動
 > このリポジトリではパッケージマネージャーのコマンドを統一するために[ni](https://github.com/antfu-collective/ni)を利用しています  
 > `nr dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、`[dotenvx@1.51.2] injecting env` のように暗号化された `.env.development` が自動的に展開されます  
 
----
-
 ## 開発と運用
 
 ### 1. 環境変数の確認と変更・追加
-- 既存の`SOME_VAR`を確認する場合
+既存の`SOME_VAR`を確認する場合
 ```sh
 DOTENV_PRIVATE_KEY=DOTENV_PRIVATE_KEY_DEVELOPMENT nlx dotenvx get SOME_VAR -f .env.development
 ```
 
-- 既存の`SOME_VAR`を更新あるいは新しく追加する場合
+既存の`SOME_VAR`を更新あるいは新しく追加する場合
 ```sh
 nlx dotenvx set SOME_VAR "value" -f .env.development
 ```
