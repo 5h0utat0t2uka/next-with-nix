@@ -76,7 +76,7 @@ cd next-with-nix
 前述のようにこのサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
 これらの復号鍵 `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` を開発時にロードされるようにしますが、以下の2つのパターンがあります  
 
-1. `infisical`から`dotenvx`の復号鍵を利用する場合  
+#### 1. `infisical`から`dotenvx`の復号鍵を利用する場合  
 -  以下のコマンドで`infisical`をインストールしてログイン
 ``` sh
 brew install infisical/get-cli/infisical
@@ -86,9 +86,9 @@ brew install infisical/get-cli/infisical
 infisical login
 ```
 
-2. `dotenvx`のみを利用する場合  
-- **安全な経路**で `.envrc.local` ファイルを受け取ります  
-- プロジェクトのルートに `.envrc.local` を配置して確認  
+#### 2. `dotenvx`のみを利用する場合  
+- **安全な経路**で `.envrc.local` ファイルを受け取る  
+- プロジェクトのルートに `.envrc.local` を配置  
 ```sh
 cp /path/from/.envrc.local ./envrc.local
 ```
@@ -117,7 +117,7 @@ direnv allow
 which node # /nix/store/xxx-nodejs-24.11.1/bin/node
 node -v    # v24.11.1
 ```
-> [!NOTE]
+> [!IMPORTANT]
 > `node` の参照が `/nix/store/` で始まるパスになってることを確認してください
 
 ### 4. 依存関係のインストールと開発サーバの起動  
