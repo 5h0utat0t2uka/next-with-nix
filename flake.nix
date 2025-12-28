@@ -45,6 +45,8 @@
       devShells.default = pkgs.mkShell {
         packages = with pkgs; [
           nodejs_24
+          pnpm
+          ni
           git
           biome
           osv-scanner
@@ -53,7 +55,7 @@
         shellHook = ''
           ${preCommit.shellHook}
           echo "node: $(node -v)"
-          echo "npm: $(npm -v)"
+          echo "pnpm: $(pnpm -v)"
         '';
       };
     }

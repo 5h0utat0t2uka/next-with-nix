@@ -2,6 +2,7 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.26.1",
   "engines": {
     "node": "24.x"
   },
@@ -14,7 +15,7 @@
     "scan": "osv-scanner scan source -r ."
   },
   "dependencies": {
-    "next": "16.1.0",
+    "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

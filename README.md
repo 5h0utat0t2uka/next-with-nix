@@ -1,12 +1,35 @@
-このリポジトリは `nix`, `direnv`, `dotenvx` を利用して **Next.js** の開発環境を、異なるOSや開発者の環境で再現するためのサンプルです
+## 構成  
+このリポジトリは `nix`, `direnv`, `dotenvx`, `ni` を利用して **Next.js** の開発環境を、異なるOSや開発者間の環境で再現するためのサンプルです  
+また、セキュリティ対策としてパッケージマネージャには`pnpm`を利用します  
 
-- `node`や`npm`がインストール済みの場合、既存のバージョンから隔離された開発環境にする
-- 環境変数は`dotenvx`で暗号化された状態でgitで管理する
-- `dotenvx`の復号化のキーは[doppler](https://www.doppler.com)
-<!--- `dotenvx`の復号化のキーは[pass](https://www.passwordstore.org)で管理を行い、さらに`gpg`で暗号化して復号鍵をプロジェクトの外に置いた状態にする-->
-<!--- `.envrc`からは`.gitignore`した`.envrc.local`の読み込みだけ行い、`.envrc.local`から`pass show`で復号鍵を展開させる-->
-<!--- 開発者間では`.envrc.local`のみを共有する-->
-- 事前にロックファイルから `osv-scanner` を利用して、インストールするnpm packageの脆弱性を確認する
+### 開発環境の趣旨と概要  
+- 各ユーザー環境の`node`や`pnpm`のインストール有無に関わらず、既存のバージョンから隔離された開発環境にする
+- `osv-scanner` を利用して、インストール前にロックファイルからパッケージの脆弱性を確認する
+- サプライチェーン攻撃・パッケージ汚染の対策として、信用するパッケージを除いてレジストリ公開後24時間未満のパッケージをインストールしない
+- インストール時の`preinstall`や`postinstall`などのビルドスクリプトは、明示的に許可したパッケージ以外は実行させない
+
+### 機密情報の取り扱い  
+このリポジトリでは`dotenvx`で`.env*`の内容を暗号化して、復号鍵を[infisical](https://infisical.com/)で管理する事で、プロジェクト内に平文のシークレット関連が存在しない状態にしています  
+[infisical](https://infisical.com/)を利用していれば、環境変数はランタイムでインジェクト出来るので`dotenvx`を利用するのは冗長ですが、[infisical](https://infisical.com/)を無償で利用可能な範囲を超えた場合の対策として用意しています  
+
+もし`dotenvx`のみで運用する場合、復号鍵の取り扱いは`.envrc`で読み込まれる`.envrc.local`で下記のように読み込ませることで展開することが可能です  
+`.envrc.local`は`.gitignore`の対象ですが「プロジェクト内に平文の復号鍵が存在する」状態になってしまうことに留意してください
+``` sh
+export DOTENV_PRIVATE_KEY_DEVELOPMENT="開発環境の復号鍵"
+export DOTENV_PRIVATE_KEY_PRODUCTION="本番環境の復号鍵"
+```
+
+[infisical](https://infisical.com/)以外にも[doppler](https://www.doppler.com/)など類似サービスはありますが、どれも有償か無償であっても何かしら制限があるので、チーム開発を前提とした場合にチーム内の足並みを揃えることが可能であれば[pass](https://www.passwordstore.org/)を利用することで、開発者のローカル環境のプロジェクト外（ホームディレクトリ）に暗号化したパスワードストアを作成して、以下のように復号鍵を展開することが可能です
+``` sh
+export DOTENV_PRIVATE_KEY_DEVELOPMENT="$(
+  pass show path/to/repository/password-store/DEVELOPMENT | head -n 1
+)"
+export DOTENV_PRIVATE_KEY_PRODUCTION="$(
+  pass show path/to/repository/password-store/PRODUCTION | head -n 1
+)"
+```
+
+この方法は外部サービスのストアに頼らず無償で管理することが可能な反面、運用や導入コストは高くなりますが、セキュリティリスクとのトレードオフになります
 
 ---
 
@@ -52,28 +75,25 @@ cd next-with-nix
 ```
 
 ### 2. `dotenvx` を利用した環境変数の管理  
-このサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
-この2つを復号するための `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` を開発時にロードされるようにします  
+前述のようにこのサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
+これらの復号鍵 `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` を開発時にロードされるようにしますが、以下の2つのパターンがあります  
 
-1. **安全な経路**で `.env.keys` ファイルを受け取ります  
-2. プロジェクトのルートに `.env.keys` を配置して確認  
-```sh
-cp /path/to/.env.keys ./env.keys
-cat .env.keys
+1. `infisical`から`dotenvx`の復号鍵を利用する場合  
+-  以下のコマンドで`infisical`をインストールしてログイン
+``` sh
+brew install infisical/get-cli/infisical
+```
+- `infisical`にログイン
+``` sh
+infisical login
 ```
 
-以下のように各環境のキーが指定されてるか確認してください
+2. `dotenvx`のみを利用する場合  
+- **安全な経路**で `.envrc.local` ファイルを受け取ります  
+- プロジェクトのルートに `.envrc.local` を配置して確認  
 ```sh
-#/------------------!DOTENV_PRIVATE_KEYS!-------------------/
-#/ private decryption keys. DO NOT commit to source control /
-#/     [how it works](https://dotenvx.com/encryption)       /
-#/----------------------------------------------------------/
-
-# .env.development
-DOTENV_PRIVATE_KEY_DEVELOPMENT=xxx
-
-# .env.production
-DOTENV_PRIVATE_KEY_PRODUCTION=zzz
+cp /path/to/.envrc.local ./envrc.local
+cat .envrc.local
 ```
 
 ## 3. `direnv` の有効化  
@@ -94,14 +114,15 @@ node -v    # v24.11.1
 
 ### 4. 依存関係のインストールと開発サーバの起動  
 通常通り以下のコマンドで依存のインストールと起動を行います  
-この際 `npm run scan` を実行して脆弱性を確認し、問題なければインストールを行います
+この際 `nr scan` を実行して脆弱性を確認し、問題なければインストールを行います
 ```sh
-npm run scan  # 脆弱性確認
-npm ci
-npm run dev
+nr scan # 脆弱性確認
+nci     # インストール
+nr dev  # 起動
 ```
 > [!NOTE]
-> `npm run dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、`[dotenvx@1.51.2] injecting env` のように暗号化された `.env.development` が自動的に展開されます
+> このリポジトリではパッケージマネージャーのコマンドを統一するために[ni](https://github.com/antfu-collective/ni)を利用しています  
+> `nr dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、`[dotenvx@1.51.2] injecting env` のように暗号化された `.env.development` が自動的に展開されます  
 
 ---
 
@@ -110,12 +131,12 @@ npm run dev
 ### 1. 環境変数の確認と変更・追加
 - 既存の`SOME_VAR`を確認する場合
 ```sh
-DOTENV_PRIVATE_KEY=DOTENV_PRIVATE_KEY_DEVELOPMENT npx dotenvx get SOME_VAR -f .env.development
+DOTENV_PRIVATE_KEY=DOTENV_PRIVATE_KEY_DEVELOPMENT nlx dotenvx get SOME_VAR -f .env.development
 ```
 
 - 既存の`SOME_VAR`を更新あるいは新しく追加する場合
 ```sh
-npx dotenvx set SOME_VAR "value" -f .env.development
+nlx dotenvx set SOME_VAR "value" -f .env.development
 ```
 
 ### 2. バージョン管理
@@ -161,6 +182,8 @@ devShells.default = pkgs.mkShell {
   packages = with pkgs; [
     # pkgs-fixed から nodejs を取り出す
     pkgs-fixed.nodejs_24
+    pnpm
+    ni
     git
     biome
     osv-scanner
@@ -168,7 +191,7 @@ devShells.default = pkgs.mkShell {
   shellHook = ''
     ${preCommit.shellHook}
     echo "node: $(node -v)"
-    echo "npm: $(npm -v)"
+    echo "pnpm: $(pnpm -v)"
   '';
 };
 ```

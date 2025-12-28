@@ -1,0 +1,13 @@
+packages:
+  - "."
+
+# preinstall, install, または postinstall などのスクリプトを許可するパッケージのリスト
+onlyBuiltDependencies:
+  - sharp
+
+# next, react, react-domを除いて、公開から24h以上経過していないパッケージのインストールを禁止
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+- next
+- react
+- react-dom
