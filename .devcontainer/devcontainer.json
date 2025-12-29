@@ -10,5 +10,6 @@
   "containerEnv": {
     "NIX_CONFIG": "experimental-features = nix-command flakes"
   },
+  "runArgs": ["-p", "3000:3000"],
   "postCreateCommand": "bash -lc 'git config --global --add safe.directory \"$(pwd)\" && nix develop -c bash -lc \"node -v && pnpm -v && biome --version && osv-scanner --version\"'"
 }

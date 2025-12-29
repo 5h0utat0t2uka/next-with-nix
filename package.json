@@ -2,12 +2,12 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.26.1",
+  "packageManager": "pnpm@10.26.2",
   "engines": {
     "node": "24.x"
   },
   "scripts": {
-    "dev": "infisical run --env dev --path /next-with-nix -- dotenvx run -f .env.development -- next dev",
+    "dev": "infisical run --env dev --path /next-with-nix -- dotenvx run -f .env.development -- next dev --hostname 0.0.0.0",
     "start": "infisical run --env prod --path /next-with-nix -- dotenvx run -f .env.production -- next start",
     "build": "infisical run --env prod --path /next-with-nix -- dotenvx run -f .env.production -- next build",
     "lint": "biome check .",

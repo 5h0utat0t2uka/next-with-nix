@@ -1,9 +1,9 @@
 ## 構成  
-このリポジトリは `nix`, `direnv`, `dotenvx`, `pnpm`, `ni` を利用して、セキュアな **Next.js** の開発環境を、異なるOSや開発者間の環境で再現するためのサンプルです  
+このリポジトリは `nix`, `direnv`, `dotenvx`, `pnpm` を利用して、セキュアな **Next.js** の開発環境を、異なるOSや開発者間の環境で再現するためのサンプルです  
+[`direnv`を利用したローカルホスト環境](#ローカルホスト環境で開発する場合)と、[`devcontainer`を利用したコンテナ環境](#コンテナ環境で開発する場合)いずれも、環境の定義は`nix`で行われるため差分が発生しません  
 
 ### 開発環境の趣旨と概要  
-- 
-- 各ユーザー環境の`node`や`pnpm`のインストール有無に関わらず、既存のバージョンから隔離された開発環境にする
+- 各ユーザー環境の`node`や`pnpm`のインストール有無に関わらず、既存のバージョンから隔離された共通の開発環境にする
 - `osv-scanner` を利用して、依存関係をインストールする前にロックファイルからパッケージの脆弱性を確認する
 - サプライチェーン攻撃・パッケージ汚染の対策として、信用するパッケージを除いてレジストリ公開後24時間未満のパッケージをインストールしない  
 悪意のあるパッケージは多くの場合レジストリ公開後数時間程度で削除されるため、インストールを未然に防ぐための対策です
@@ -21,7 +21,8 @@ export DOTENV_PRIVATE_KEY_DEVELOPMENT="開発環境の復号鍵"
 export DOTENV_PRIVATE_KEY_PRODUCTION="本番環境の復号鍵"
 ```
 
-[infisical](https://infisical.com/)以外にも[doppler](https://www.doppler.com/)など類似サービスはありますが、どれも有償か無償であっても何かしら制限があります  
+<!--[infisical](https://infisical.com/)以外にも[doppler](https://www.doppler.com/)など類似サービスはありますが、どれも有償か無償であっても何かしら制限があります  
+
 チーム開発を前提とした場合にチーム内の足並みを揃えることが可能であれば[pass](https://www.passwordstore.org/)を利用することで、開発者のローカル環境のプロジェクト外（ホームディレクトリ）に暗号化したパスワードストアを作成して、以下のように復号鍵を展開することが可能です
 ``` sh
 export DOTENV_PRIVATE_KEY_DEVELOPMENT="$(
@@ -32,25 +33,23 @@ export DOTENV_PRIVATE_KEY_PRODUCTION="$(
 )"
 ```
 
-この方法は外部サービスのストアに頼らず無償で管理することが可能な反面、運用や導入コストは高くなりますが、セキュリティリスクとのトレードオフになります
+この方法は外部サービスのストアに頼らず無償で管理することが可能な反面、運用や導入コストは高くなりますが、セキュリティリスクとのトレードオフになります-->
 
-## パッケージのインストール  
+---
+
+## ローカルホスト環境で開発する場合  
 すでに`nix`, `direnv`をインストール済みの場合はスキップしてください
 
-### 1. `nix` のインストール  
+### 1. 必要なパッケージのインストール  
 ```sh
 curl -fsSL https://install.determinate.systems/nix | sh -s -- install
+brew install direnv
 ```
 
 シェルの再起動後にバージョンを確認
 ```sh
 exec $SHELL
 nix --version
-```
-
-### 2. `direnv` のインストール  
-```sh
-brew install direnv
 ```
 
 シェルへフックの組み込み
@@ -65,19 +64,17 @@ exec $SHELL
 direnv version
 ```
 
-## 初回の設定と起動  
-
-### 1. リポジトリのクローン
+### 2. リポジトリのクローン
 ```sh
 git clone <このリポジトリ>
 cd next-with-nix
 ```
 
-### 2. `dotenvx` を利用した環境変数の管理  
+### 3. 環境変数の管理  
 前述のようにこのサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
 これらの復号鍵 `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` を開発時にロードされるようにしますが、以下の2つのパターンがあります  
 
-#### 1. `infisical`から`dotenvx`の復号鍵を利用する場合  
+#### `infisical`から復号鍵を利用する場合  
 -  以下のコマンドで`infisical`をインストールしてログイン
 ``` sh
 brew install infisical/get-cli/infisical
@@ -87,7 +84,7 @@ brew install infisical/get-cli/infisical
 infisical login
 ```
 
-#### 2. `dotenvx`のみを利用する場合  
+#### `dotenvx`のみを利用する場合  
 - **安全な経路**で `.envrc.local` ファイルを受け取る  
 - プロジェクトのルートに `.envrc.local` を配置  
 ```sh
@@ -105,7 +102,7 @@ cp /path/from/.envrc.local ./envrc.local
 },
 ```
 
-## 3. `direnv` の有効化  
+### 4. `direnv` の有効化  
 このリポジトリには `.envrc` が含まれています  
 これによってディレクトリに入ると自動的に `devShell` 起動されるようになるので、以下のコマンドで許可します
 ```sh
@@ -121,7 +118,7 @@ node -v    # v24.11.1
 > [!IMPORTANT]
 > `node` の参照が `/nix/store/` で始まるパスになってることを確認してください
 
-### 4. 依存関係のインストールと開発サーバの起動  
+### 5. 依存関係のインストールと開発サーバの起動  
 通常通り以下のコマンドで依存のインストールと起動を行います  
 この際 `nr scan` を実行して脆弱性を確認し、問題なければインストールを行います
 ```sh
@@ -132,6 +129,41 @@ nr dev  # 起動
 > [!NOTE]
 > このリポジトリではパッケージマネージャーのコマンドを統一するために[ni](https://github.com/antfu-collective/ni)を利用しています  
 > `nr dev` は内部的に `dotenvx run -f .env.development -- next dev` として `dotenvx` を経由して実行され、`[dotenvx@1.51.2] injecting env` のように暗号化された `.env.development` が自動的に展開されます  
+
+---
+
+## コンテナ環境で開発する場合
+すでに`docker`, `devcontainers/cli`をインストール済みの場合はスキップしてください
+
+### 1. 必要なパッケージのインストール  
+```sh
+brew install docker colima
+npm install -g @devcontainers/cli
+```
+> [!NOTE]
+> ランタイムに`colima`を利用する場合  
+
+### 2. リポジトリのクローン
+```sh
+git clone <このリポジトリ>
+cd next-with-nix
+```
+
+### 3. `docker` ランタイムとコンテナを起動
+```sh
+colima start
+devcontainer up --workspace-folder .
+devcontainer exec --workspace-folder . bash
+```
+
+### 4. コンテナ内から開発サーバの起動  
+```sh
+nix develop
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+---
 
 ## 開発と運用
 
