@@ -1,14 +1,17 @@
 ## 構成  
 このリポジトリは `nix`, `direnv`, `dotenvx`, `pnpm` を利用して、セキュアな **Next.js** の開発環境を、異なるOSや開発者間の環境で再現するためのサンプルです  
+
 [`direnv`を利用したローカルホスト環境](#ローカルホスト環境で開発する場合)と、[`devcontainer`を利用したコンテナ環境](#コンテナ環境で開発する場合)いずれも、環境の定義は`nix`で行われるため差分が発生しません  
 
 ### 開発環境の趣旨と概要  
 - 各ユーザー環境の`node`や`pnpm`のインストール有無に関わらず、既存のバージョンから隔離された共通の開発環境にする
 - `osv-scanner` を利用して、依存関係をインストールする前にロックファイルからパッケージの脆弱性を確認する
 - サプライチェーン攻撃・パッケージ汚染の対策として、信用するパッケージを除いてレジストリ公開後24時間未満のパッケージをインストールしない  
-悪意のあるパッケージは多くの場合レジストリ公開後数時間程度で削除されるため、インストールを未然に防ぐための対策です
+> [!NOTE]
+> 悪意のあるパッケージは多くの場合レジストリ公開後数時間程度で削除されるため、インストール自体を未然に防ぐための対策です  
 - インストール時の`preinstall`や`postinstall`などのビルドスクリプトは、明示的に許可したパッケージ以外は実行させない  
-これはビルドスクリプトをトリガとする感染を防ぐための対策です
+> [!NOTE]
+> インストール時のスクリプトをトリガとする感染を防ぐための対策です  
 
 ### 機密情報の取り扱い  
 このリポジトリでは`dotenvx`で`.env*`の内容を暗号化して、復号鍵を[infisical](https://infisical.com/)で管理する事で、プロジェクト内に平文のシークレット関連が存在しない状態にしています  
@@ -72,25 +75,25 @@ cd next-with-nix
 
 ### 3. 環境変数の管理  
 前述のようにこのサンプルでは `.env.development`, `.env.production` を **dotenvx** で暗号化した上でgitで管理します  
+
 これらの復号鍵 `DOTENV_PRIVATE_KEY_DEVELOPMENT`, `DOTENV_PRIVATE_KEY_PRODUCTION` を開発時にロードされるようにしますが、以下の2つのパターンがあります  
 
-#### `infisical`から復号鍵を利用する場合  
--  以下のコマンドで`infisical`をインストールしてログイン
+#### (1) `infisical`から復号鍵を利用する場合  
+以下のコマンドで`infisical`をインストールしてログイン
 ``` sh
 brew install infisical/get-cli/infisical
 ```
-- `infisical`にログイン
+`infisical`にログイン
 ``` sh
 infisical login
 ```
 
-#### `dotenvx`のみを利用する場合  
-- **安全な経路**で `.envrc.local` ファイルを受け取る  
-- プロジェクトのルートに `.envrc.local` を配置  
+#### (2) `dotenvx`のみを利用する場合  
+**安全な経路**で `.envrc.local` ファイルを受け取って、プロジェクトのルートに `.envrc.local` を配置  
 ```sh
 cp /path/from/.envrc.local ./envrc.local
 ```
-- `package.json` の `scripts` から`infisical`を取り除いて以下のように変更
+`package.json` の `scripts` から`infisical`を取り除いて以下のように変更
 ```json
 "scripts": {
   "dev": "dotenvx run -f .env.development -- next dev",
