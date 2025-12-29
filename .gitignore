@@ -27,11 +27,17 @@
 .envrc.local
 .pre-commit-config.yaml
 
+# devcontainer
+.devcontainer/.env
+.devcontainer/.cache
+.devcontainer/.cache/*
+
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.pnpm-store
 
 # env files (dotenvx)
 .env.keys

@@ -49,6 +49,7 @@
           ni
           git
           biome
+          infisical
           osv-scanner
         ];
 

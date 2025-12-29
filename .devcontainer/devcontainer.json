@@ -1,0 +1,14 @@
+{
+  "name": "next-with-nix",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/nix:1": {
+      "version": "latest"
+    }
+  },
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "NIX_CONFIG": "experimental-features = nix-command flakes"
+  },
+  "postCreateCommand": "bash -lc 'git config --global --add safe.directory \"$(pwd)\" && nix develop -c bash -lc \"node -v && pnpm -v && biome --version && osv-scanner --version\"'"
+}
