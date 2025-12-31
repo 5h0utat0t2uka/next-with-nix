@@ -3,6 +3,8 @@
 
 [`direnv`を利用したローカルホスト環境](#ローカルホスト環境で開発する場合)と、[`devcontainer`を利用したコンテナ環境](#コンテナ環境で開発する場合)いずれも、環境の定義は`nix`で行われるため差分が発生しません  
 
+![Alt](https://repobeats.axiom.co/api/embed/89db6bf0ceb998a2d67b1c6f62b058ebf013c79a.svg "Repobeats analytics image")  
+
 ### 開発環境の趣旨と概要  
 - 各ユーザー環境の`node`や`pnpm`のインストール有無に関わらず、既存のバージョンから隔離された共通の開発環境にする
 - `osv-scanner` を利用して、依存関係をインストールする前にロックファイルからパッケージの脆弱性を確認する
