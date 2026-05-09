@@ -2,7 +2,6 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.26.2",
   "engines": {
     "node": "24.x"
   },
@@ -15,15 +14,15 @@
     "scan": "osv-scanner scan source -r ."
   },
   "dependencies": {
-    "next": "16.1.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.51.2",
-    "@types/node": "^25",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "typescript": "^5"
+    "@dotenvx/dotenvx": "^1.65.0",
+    "@types/node": "^25.6.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
   }
 }

@@ -7,7 +7,7 @@
     git-hooks.url = "github:cachix/git-hooks.nix";
   };
 
-  outputs = { self, nixpkgs, flake-utils, git-hooks, ... }:
+  outputs = { nixpkgs, flake-utils, git-hooks, ... }:
 
   flake-utils.lib.eachDefaultSystem (system:
     let

@@ -1,13 +1,21 @@
 packages:
-  - "."
+  - .
 
-# preinstall, install, または postinstall などのスクリプトを許可するパッケージのリスト
-onlyBuiltDependencies:
-  - sharp
-
-# next, react, react-domを除いて、公開から24h以上経過していないパッケージのインストールを禁止
 minimumReleaseAge: 1440
+
 minimumReleaseAgeExclude:
   - next
   - react
   - react-dom
+
+onlyBuiltDependencies:
+  - sharp
+
+overrides:
+  next@>=15.6.0-canary.0 <16.1.5: '>=16.1.5'
+  next@>=16.0.0-beta.0 <16.1.5: '>=16.1.5'
+  next@>=16.0.0-beta.0 <16.1.7: '>=16.1.7'
+  next@>=16.0.0-beta.0 <16.2.3: '>=16.2.3'
+  next@>=16.0.1 <16.1.7: '>=16.1.7'
+  next@>=16.1.0-canary.0 <16.1.5: '>=16.1.5'
+  postcss@<8.5.10: '>=8.5.10'
